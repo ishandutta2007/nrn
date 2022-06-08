@@ -245,23 +245,29 @@ cpp_cc_git_submodule(Random123)
 # Enable sanitizer support if the NRN_SANITIZERS variable is set
 # =============================================================================
 # unsigned integer flow is not actually undefined behaviour, and NEURON has a lot of it...
-message(STATUS "CODING_CONV_PREFIX=${CODING_CONV_PREFIX}")
 set(${CODING_CONV_PREFIX}_SANITIZERS_UNDEFINED_EXCLUSIONS
     implicit-signed-integer-truncation unsigned-integer-overflow
     CACHE STRING "" FORCE)
-message(
-  STATUS
-    "${CODING_CONV_PREFIX}_SANITIZERS_UNDEFINED_EXCLUSIONS=${${CODING_CONV_PREFIX}_SANITIZERS_UNDEFINED_EXCLUSIONS}"
-)
 include("${CODING_CONV_CMAKE}/sanitizers.cmake")
 list(APPEND NRN_COMPILE_FLAGS ${NRN_SANITIZER_COMPILER_FLAGS})
 list(APPEND NRN_LINK_FLAGS ${NRN_SANITIZER_COMPILER_FLAGS})
 if(NRN_SANITIZER_LIBRARY_DIR)
   list(APPEND NRN_LINK_FLAGS "-Wl,-rpath,${NRN_SANITIZER_LIBRARY_DIR}")
 endif()
+# nocmodl is quite noisy when run under LeakSanitizer, so only set the
+# environment variables that enable sanitizers if LeakSanitizer is not among
+# them
+string(REPLACE "," ";" nrn_sanitizers "${NRN_SANITIZERS}")
+if("leak" IN_LIST nrn_sanitizers)
+  set(NRN_NOCMODL_SANITIZER_ENVIRONMENT ${NRN_SANITIZER_DISABLE_ENVIRONMENT})
+else()
+  set(NRN_NOCMODL_SANITIZER_ENVIRONMENT ${NRN_SANITIZER_ENABLE_ENVIRONMENT})
+endif()
+string(JOIN " " NRN_NOCMODL_SANITIZER_ENVIRONMENT_STRING ${NRN_NOCMODL_SANITIZER_ENVIRONMENT})
 string(JOIN " " NRN_SANITIZER_ENABLE_ENVIRONMENT_STRING ${NRN_SANITIZER_ENABLE_ENVIRONMENT})
-if(NRN_ENABLE_TESTS)
+if(NRN_SANITIZERS)
   configure_file(bin/nrn-enable-sanitizer.in bin/nrn-enable-sanitizer @ONLY)
+  install(PROGRAMS ${PROJECT_BINARY_DIR}/bin/nrn-enable-sanitizer DESTINATION ${CMAKE_INSTALL_PREFIX}/bin)
 endif()
 
 # =============================================================================
