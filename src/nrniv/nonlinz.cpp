@@ -582,6 +582,19 @@ void NonLinImpRep::ode(int im, Memb_list* ml) {  // assume there is in fact an o
     (*s)(nrn_threads, ml, im);
 }
 
+namespace {
+    std::size_t mem_usage(const char* title, std::size_t old_usage = {}) {
+        auto const x = nrn_mallinfo(0);
+        if(old_usage) {
+            double const change{std::abs(double(x) - double(old_usage))/double(old_usage)};
+            if(change > 0.01) {
+                std::cout << "rank " << nrnmpi_myid << ' ' << title << ' ' << x << " (" << 100.0*change << "%)" << std::endl;
+            }
+        }
+        return x;
+    }
+}
+
 int NonLinImpRep::gapsolve() {
     // On entry, rv_ and jv_ contain the complex b for A*x = b.
     // On return rv_ and jv_ contain complex solution, x.
@@ -600,9 +613,9 @@ int NonLinImpRep::gapsolve() {
         }
     }
 #endif
-
+    auto const mem1 = mem_usage("before pargap_jacobi_setup");
     pargap_jacobi_setup(0);
-
+    auto const mem2 = mem_usage("after pargap_jacobi_setup", mem1);
     double *rx, *jx, *rx1, *jx1, *rb, *jb;
     if (neq_) {
         rx = new double[neq_];
@@ -612,6 +625,7 @@ int NonLinImpRep::gapsolve() {
         rb = new double[neq_];
         jb = new double[neq_];
     }
+    auto const mem3 = mem_usage("after allocating arrays", mem2);
 
     // initialize for first iteration
     for (int i = 0; i < neq_; ++i) {
@@ -666,6 +680,10 @@ int NonLinImpRep::gapsolve() {
         }
         pargap_jacobi_rhs(rb, rx);
         pargap_jacobi_rhs(jb, jx);
+        // mem_usage
+        std::ostringstream oss;
+        oss << "end of iter " << iter;
+        mem_usage(oss.str().c_str(), mem3);
     }
 
     pargap_jacobi_setup(1);  // tear down
