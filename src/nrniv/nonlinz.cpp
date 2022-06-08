@@ -615,7 +615,7 @@ int NonLinImpRep::gapsolve() {
 #endif
     auto const mem1 = mem_usage("before pargap_jacobi_setup");
     pargap_jacobi_setup(0);
-    auto const mem2 = mem_usage("after pargap_jacobi_setup", mem1);
+    mem_usage("after pargap_jacobi_setup", mem1);
     double *rx, *jx, *rx1, *jx1, *rb, *jb;
     if (neq_) {
         rx = new double[neq_];
@@ -625,7 +625,7 @@ int NonLinImpRep::gapsolve() {
         rb = new double[neq_];
         jb = new double[neq_];
     }
-    auto const mem3 = mem_usage("after allocating arrays", mem2);
+    auto const mem3 = mem_usage("after allocating arrays");
 
     // initialize for first iteration
     for (int i = 0; i < neq_; ++i) {
