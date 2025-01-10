@@ -1,4 +1,4 @@
-#include <../../nmodlconf.h>
+#include <../../nrnconf.h>
 /* /local/src/master/nrn/src/modlunit/model.c,v 1.6 1998/07/12 13:19:02 hines Exp */
 
 /*
@@ -24,6 +24,7 @@
  * still gives the prefix of the .c and .var files.
  */
 
+#include <cstring>
 #include "model.h"
 #include "parse1.hpp"
 
@@ -45,8 +46,6 @@ Item* qlint;
 #endif
 
 static const char* pgm_name = "model";
-extern const char* RCS_version;
-extern const char* RCS_date;
 static void openfiles(int, char**);
 static void debug_item(Item* q, int indent, FILE* file);
 
@@ -56,9 +55,6 @@ int main(int argc, char* argv[]) {
      * files
      * We first look for a .mrg file and then a .mod file
      */
-    Fprintf(stderr, "%s   %s   %s\n", pgm_name, RCS_version, RCS_date);
-
-
     init(); /* keywords into symbol table, initialize
              * lists, etc. */
     unit_init();
