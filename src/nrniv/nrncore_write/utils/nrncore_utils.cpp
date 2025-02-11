@@ -11,7 +11,9 @@
 #include "vrecitem.h"  // for nrnbbcore_vecplay_write
 #include "parse.hpp"
 #include <string>
+#ifdef HAVE_UNISTD_H
 #include <unistd.h>
+#endif
 #include <algorithm>
 #include <cerrno>
 #include <filesystem>
@@ -103,7 +105,7 @@ void nrnbbcore_register_mapping() {
     int nlfp = vector_capacity(lfp);
 
     if (nsec != nseg) {
-        std::cout << "Error: Section and Segment mapping vectors should have same size!\n";
+        Printf("Error: Section and Segment mapping vectors should have same size!\n");
         abort();
     }
 
@@ -120,9 +122,10 @@ void nrnbbcore_register_mapping() {
     mapinfo.add_sec_mapping(gid, smap);
 }
 
-// This function is related to stdindex2ptr in CoreNeuron to determine which values should
-// be transferred from CoreNeuron. Types correspond to the value to be transferred based on
-// mech_type enum or non-artificial cell mechanisms.
+// This function is related to legacy_index2pointer in CoreNeuron to determine
+// which values should be transferred from CoreNeuron. Types correspond to the
+// value to be transferred based on mech_type enum or non-artificial cell
+// mechanisms.
 // Limited to pointers to voltage, nt.node_sav_rhs_storage() (fast_imem value) or
 // data of non-artificial cell mechanisms.
 // Input double* and NrnThread. Output type and index.
